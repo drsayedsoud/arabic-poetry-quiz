@@ -158,7 +158,7 @@ export default function Home() {
                             key={optIndex}
                             onClick={() => handleSelectOption(qIndex, optIndex)}
                             disabled={showResults}
-                            className={\`p-4 rounded-xl border text-right transition-all flex items-center justify-between \${btnClass}\`}
+                            className={`p-4 rounded-xl border text-right transition-all flex items-center justify-between ${btnClass}`}
                           >
                             <span>{opt}</span>
                             {showResults && isCorrect && <CheckCircle className="w-5 h-5 text-emerald-400" />}
