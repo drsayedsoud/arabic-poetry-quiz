@@ -17,8 +17,29 @@ export interface PoetryData {
 }
 
 export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> => {
+  // Fetch available models dynamically to avoid 404 errors
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.error?.message || "فشل الاتصال بواجهة برمجة التطبيقات");
+  }
+
+  // Find a suitable model, prioritizing flash or pro models
+  const models = data.models || [];
+  const generateModels = models.filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"));
+  
+  if (generateModels.length === 0) {
+    throw new Error("لم يتم العثور على أي نموذج يدعم توليد النصوص في حسابك.");
+  }
+
+  // Prefer gemini-1.5-flash, then gemini-1.5-pro, then any gemini model
+  let selectedModelName = generateModels[0].name.replace("models/", "");
+  const preferred = generateModels.find((m: any) => m.name.includes("gemini-1.5-flash") || m.name.includes("gemini-2.0-flash"));
+  if (preferred) selectedModelName = preferred.name.replace("models/", "");
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: selectedModelName });
 
   const prompt = `
 أنت خبير في الأدب العربي والشعر. قم باختيار بيت شعر واحد من روائع الشعر العربي (تأكد أن البيت مشهور وقوي).
