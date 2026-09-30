@@ -16,6 +16,9 @@ export default function Home() {
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState("");
 
+  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [testMessage, setTestMessage] = useState("");
+
   useEffect(() => {
     const savedKey = localStorage.getItem("gemini_api_key");
     if (savedKey) {
@@ -25,10 +28,30 @@ export default function Home() {
     }
   }, []);
 
+  const testKey = async () => {
+    if (!apiKey) return;
+    setTestStatus("loading");
+    setTestMessage("");
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || "مفتاح غير صالح");
+      }
+      setTestStatus("success");
+      setTestMessage("المفتاح يعمل بنجاح! تم العثور على النماذج المتاحة.");
+    } catch (err: any) {
+      setTestStatus("error");
+      setTestMessage(err.message || "حدث خطأ أثناء الاتصال بالخادم");
+    }
+  };
+
   const saveApiKey = (key: string) => {
     localStorage.setItem("gemini_api_key", key);
     setApiKey(key);
     setIsSettingsOpen(false);
+    setTestStatus("idle");
+    setTestMessage("");
   };
 
   const fetchNewQuiz = async () => {
@@ -257,6 +280,25 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-2">
                   يتم حفظ المفتاح محلياً في متصفحك فقط ولا يتم إرساله لأي خادم آخر. يمكنك الحصول على مفتاح مجاني من منصة Google AI Studio.
                 </p>
+                {testMessage && (
+                  <div className={`mt-3 p-3 rounded-lg text-sm border ${testStatus === 'success' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-red-500/20 border-red-500 text-red-300'}`}>
+                    {testMessage}
+                  </div>
+                )}
+                <button
+                  onClick={testKey}
+                  disabled={!apiKey || testStatus === "loading"}
+                  className="mt-4 w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 space-x-reverse"
+                >
+                  {testStatus === "loading" ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>جاري الفحص...</span>
+                    </>
+                  ) : (
+                    <span>تجربة المفتاح</span>
+                  )}
+                </button>
               </div>
               <button
                 onClick={() => saveApiKey(apiKey)}
