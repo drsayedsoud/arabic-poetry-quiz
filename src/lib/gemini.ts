@@ -33,9 +33,14 @@ export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> =>
     throw new Error("لم يتم العثور على أي نموذج يدعم توليد النصوص في حسابك.");
   }
 
-  // Prefer gemini-1.5-flash, then gemini-1.5-pro, then any gemini model
+  // Prefer modern models like gemini-3.8-flash, gemini-3.5-flash
   let selectedModelName = generateModels[0].name.replace("models/", "");
-  const preferred = generateModels.find((m: any) => m.name.includes("gemini-1.5-flash") || m.name.includes("gemini-2.0-flash"));
+  const preferred = generateModels.find((m: any) => 
+    m.name.includes("gemini-3.8-flash") || 
+    m.name.includes("gemini-3.5-flash") || 
+    m.name.includes("gemini-flash-latest") ||
+    m.name.includes("gemini-3.")
+  );
   if (preferred) selectedModelName = preferred.name.replace("models/", "");
 
   const genAI = new GoogleGenerativeAI(apiKey);
