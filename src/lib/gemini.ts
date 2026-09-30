@@ -18,8 +18,7 @@ export interface PoetryData {
 
 export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> => {
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Using gemini-1.5-flash for fast responses
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
   const prompt = `
 أنت خبير في الأدب العربي والشعر. قم باختيار بيت شعر واحد من روائع الشعر العربي (تأكد أن البيت مشهور وقوي).
