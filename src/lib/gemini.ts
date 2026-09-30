@@ -29,24 +29,36 @@ export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> =>
   const models = data.models || [];
   const generateModels = models.filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"));
   
-  if (generateModels.length === 0) {
+  // Create a priority list of models to try
+  const modelsToTry = generateModels
+    .map((m: any) => m.name.replace("models/", ""))
+    .sort((a: string, b: string) => {
+      // Priority: 3.8, then 3.5, then lite, then latest
+      const score = (name: string) => {
+        if (name.includes("3.8-flash")) return 10;
+        if (name.includes("3.5-flash-lite")) return 9; // Lite often has less demand
+        if (name.includes("3.5-flash")) return 8;
+        if (name.includes("flash-latest")) return 7;
+        if (name.includes("gemini-3")) return 6;
+        return 0;
+      };
+      return score(b) - score(a);
+    });
+
+  if (modelsToTry.length === 0) {
     throw new Error("لم يتم العثور على أي نموذج يدعم توليد النصوص في حسابك.");
   }
 
-  // Prefer modern models like gemini-3.8-flash, gemini-3.5-flash
-  let selectedModelName = generateModels[0].name.replace("models/", "");
-  const preferred = generateModels.find((m: any) => 
-    m.name.includes("gemini-3.8-flash") || 
-    m.name.includes("gemini-3.5-flash") || 
-    m.name.includes("gemini-flash-latest") ||
-    m.name.includes("gemini-3.")
-  );
-  if (preferred) selectedModelName = preferred.name.replace("models/", "");
-
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: selectedModelName });
+  
+  let lastError = null;
+  let text = "";
 
-  const prompt = `
+  // Try models sequentially until one works
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const prompt = `
 أنت خبير في الأدب العربي والشعر. قم باختيار بيت شعر واحد من روائع الشعر العربي (تأكد أن البيت مشهور وقوي).
 ثم قم بتوليد الأسئلة التالية حول هذا البيت بصيغة اختيار من متعدد (سؤال و 4 خيارات).
 الأسئلة المطلوبة:
@@ -69,20 +81,34 @@ export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> =>
     {
       "question": "نص السؤال هنا",
       "options": ["خيار 1", "خيار 2", "خيار 3", "خيار 4"],
-      "correctAnswerIndex": 0 // رقم الخيار الصحيح (من 0 إلى 3)
+      "correctAnswerIndex": 0
     }
   ]
 }
-  `;
+      `;
+      const result = await model.generateContent(prompt);
+      text = result.response.text();
+      break; // Success! exit the loop
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`Model ${modelName} failed:`, err.message);
+      // If it's an auth error, don't try the other models
+      if (err.message.includes("403") || err.message.includes("API key not valid")) {
+        throw new Error("مفتاح الذكاء الاصطناعي غير صالح أو ليس لديك الصلاحية.");
+      }
+      // Continue to next model on 503 or 404
+      continue;
+    }
+  }
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-  
+  if (!text) {
+    throw new Error(lastError?.message || "جميع النماذج تواجه ضغطاً كبيراً الآن، حاول مرة أخرى لاحقاً.");
+  }
   // Extract JSON in case there are markdown codeblocks
   let cleanText = text.trim();
-  if (cleanText.startsWith('\`\`\`json')) {
+  if (cleanText.startsWith('```json')) {
     cleanText = cleanText.substring(7, cleanText.length - 3);
-  } else if (cleanText.startsWith('\`\`\`')) {
+  } else if (cleanText.startsWith('```')) {
     cleanText = cleanText.substring(3, cleanText.length - 3);
   }
   
