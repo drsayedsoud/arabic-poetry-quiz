@@ -26,7 +26,52 @@ export default function Home() {
   const [testMessage, setTestMessage] = useState("");
   
   const [totalQuestions, setTotalQuestions] = useState(offlineData.length);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState<{message: string, type: "success" | "warning"} | null>(null);
+
+  // Wake Lock for "Always On Screen"
+  useEffect(() => {
+    let wakeLock: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (err: any) {
+        console.warn(`${err.name}, ${err.message}`);
+      }
+    };
+    requestWakeLock();
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Long press logic for settings
+  const [pressTimer, setPressTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const handlePressStart = () => {
+    const timer = setTimeout(() => {
+      const pwd = window.prompt("للدخول للإعدادات، أدخل الرقم السري:");
+      if (pwd === "1153") {
+        setIsSettingsOpen(true);
+      } else if (pwd !== null) {
+        setToast({ message: "⚠️ الرقم السري خاطئ!", type: "warning" });
+        setTimeout(() => setToast(null), 3000);
+      }
+    }, 1500); // 1.5s hold
+    setPressTimer(timer);
+  };
+
+  const handlePressEnd = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
 
   useEffect(() => {
     const savedKey = localStorage.getItem("gemini_api_key");
@@ -114,8 +159,8 @@ export default function Home() {
       setAiQueue(prev => [...prev, result]);
       setTotalQuestions(prev => prev + 1);
       
-      setToastMessage("✨ تم توليد مقطع شعري جديد بنجاح!");
-      setTimeout(() => setToastMessage(""), 3000);
+      setToast({message: "✨ تم توليد مقطع شعري جديد بنجاح!", type: "success"});
+      setTimeout(() => setToast(null), 3000);
       
       try {
         await fetch('/api/saveOffline', {
@@ -161,7 +206,8 @@ export default function Home() {
 
   const handleSubmit = () => {
     if (Object.keys(answers).length < (data?.questions.length || 0)) {
-      alert("الرجاء الإجابة على جميع الأسئلة أولاً!");
+      setToast({message: "⚠️ الرجاء الإجابة على جميع الأسئلة أولاً!", type: "warning"});
+      setTimeout(() => setToast(null), 3000);
       return;
     }
     setShowResults(true);
@@ -175,17 +221,24 @@ export default function Home() {
           <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
             <span className="text-2xl">📜</span>
           </div>
-          <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm flex items-baseline">
-            روائع الشعر العربي
-            <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
-          </h1>
+          <div className="flex flex-col justify-center">
+            <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm flex items-baseline -mt-1">
+              روائع الشعر العربي
+              <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
+            </h1>
+            <span className="text-xs md:text-sm font-medium text-indigo-300/80">سارة السيد أبوالسعود</span>
+          </div>
         </div>
         <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg"
+          onMouseDown={handlePressStart}
+          onMouseUp={handlePressEnd}
+          onMouseLeave={handlePressEnd}
+          onTouchStart={handlePressStart}
+          onTouchEnd={handlePressEnd}
+          className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg select-none"
           title="الإعدادات"
         >
-          <Settings className="w-5 h-5 md:w-6 md:h-6 text-amber-100" />
+          <Settings className="w-5 h-5 md:w-6 md:h-6 text-amber-100 pointer-events-none" />
         </button>
       </header>
 
@@ -239,25 +292,13 @@ export default function Home() {
               className="w-full space-y-8 md:space-y-10 pb-24"
             >
               {/* Verse Card */}
-              <div className="bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/20 relative overflow-hidden group sticky top-24 z-30 mb-8">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-500/10 to-orange-600/10 rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-500/10 to-purple-600/10 rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150"></div>
+              <div className={`backdrop-blur-2xl rounded-3xl p-4 md:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border relative overflow-hidden group sticky top-24 z-30 mb-8 ${isOfflineMode ? 'bg-slate-900/90 border-white/10' : 'bg-indigo-950/90 border-indigo-500/30'}`}>
+                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-amber-500/10 to-orange-600/10' : 'from-emerald-500/10 to-teal-600/10'}`}></div>
+                <div className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-indigo-500/10 to-purple-600/10' : 'from-indigo-500/10 to-cyan-600/10'}`}></div>
                 
-                <h2 className="relative text-2xl md:text-5xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-6 md:py-10 font-serif whitespace-pre-line drop-shadow-md">
+                <h2 className="relative text-2xl md:text-4xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-4 md:py-6 font-serif whitespace-pre-line drop-shadow-md">
                   "{data.verse.replace(/\\n/g, '\n')}"
                 </h2>
-                
-                {isOfflineMode ? (
-                  <div className="absolute top-4 md:top-6 left-4 md:left-6 bg-slate-500/20 text-slate-300 border border-slate-500/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 space-x-reverse shadow-lg">
-                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-slate-400 rounded-full"></span>
-                    <span>سؤال محلي (Offline)</span>
-                  </div>
-                ) : (
-                  <div className="absolute top-4 md:top-6 left-4 md:left-6 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 space-x-reverse shadow-lg">
-                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span>سؤال جديد (AI)</span>
-                  </div>
-                )}
               </div>
 
               {/* Questions */}
@@ -470,15 +511,19 @@ export default function Home() {
       </AnimatePresence>
       {/* Toast Notification */}
       <AnimatePresence>
-        {toastMessage && (
+        {toast && (
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 bg-slate-900/90 backdrop-blur-md border border-emerald-500/30 shadow-[0_10px_40px_rgba(16,185,129,0.2)] text-emerald-400 px-6 py-4 rounded-2xl flex items-center space-x-3 space-x-reverse font-medium"
+            className={`fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 bg-slate-900/90 backdrop-blur-md border shadow-2xl px-6 py-4 rounded-2xl flex items-center space-x-3 space-x-reverse font-medium ${
+              toast.type === "success" 
+                ? "border-emerald-500/30 text-emerald-400 shadow-emerald-500/20" 
+                : "border-rose-500/30 text-rose-400 shadow-rose-500/20"
+            }`}
           >
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping mr-2"></div>
-            <span>{toastMessage}</span>
+            {toast.type === "success" && <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping mr-2"></div>}
+            <span>{toast.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
