@@ -71,15 +71,33 @@ export default function Home() {
   const [aiQueue, setAiQueue] = useState<PoetryData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const shuffleQuizData = (quizData: PoetryData) => {
+    quizData.questions.forEach((q) => {
+      const originalOptions = [...q.options];
+      const correctText = originalOptions[q.correctAnswerIndex];
+      
+      // Fisher-Yates shuffle
+      for (let i = q.options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+      }
+      
+      // Update correct index based on shuffled position
+      q.correctAnswerIndex = q.options.indexOf(correctText);
+    });
+    return quizData;
+  };
+
   const getNextOffline = () => {
     const verses = offlineData as PoetryData[];
     let lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
     if (lastIndex >= verses.length) {
         lastIndex = 0;
     }
-    const nextVerse = verses[lastIndex];
+    // Clone to avoid mutating the original JSON object imported in memory
+    const nextVerse = JSON.parse(JSON.stringify(verses[lastIndex]));
     localStorage.setItem("last_offline_index", (lastIndex + 1).toString());
-    return nextVerse;
+    return shuffleQuizData(nextVerse);
   };
 
   const startBackgroundGeneration = async () => {
@@ -113,9 +131,9 @@ export default function Home() {
     setAnswers({});
     
     if (aiQueue.length > 0) {
-      const nextAi = aiQueue[0];
+      const nextAi = JSON.parse(JSON.stringify(aiQueue[0]));
       setAiQueue(prev => prev.slice(1));
-      setData(nextAi);
+      setData(shuffleQuizData(nextAi));
       setIsOfflineMode(false);
     } else {
       setData(getNextOffline());
