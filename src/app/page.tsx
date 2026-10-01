@@ -24,6 +24,9 @@ export default function Home() {
 
   const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [testMessage, setTestMessage] = useState("");
+  
+  const [totalQuestions, setTotalQuestions] = useState(offlineData.length);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const savedKey = localStorage.getItem("gemini_api_key");
@@ -109,6 +112,10 @@ export default function Home() {
     try {
       const result = await generatePoetryQuiz(keyToUse);
       setAiQueue(prev => [...prev, result]);
+      setTotalQuestions(prev => prev + 1);
+      
+      setToastMessage("✨ تم توليد مقطع شعري جديد بنجاح!");
+      setTimeout(() => setToastMessage(""), 3000);
       
       try {
         await fetch('/api/saveOffline', {
@@ -170,7 +177,7 @@ export default function Home() {
           </div>
           <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm flex items-baseline">
             روائع الشعر العربي
-            <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({offlineData.length} سؤال)</span>
+            <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
           </h1>
         </div>
         <button
@@ -458,6 +465,20 @@ export default function Home() {
                 </div>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 bg-slate-900/90 backdrop-blur-md border border-emerald-500/30 shadow-[0_10px_40px_rgba(16,185,129,0.2)] text-emerald-400 px-6 py-4 rounded-2xl flex items-center space-x-3 space-x-reverse font-medium"
+          >
+            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping mr-2"></div>
+            <span>{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
