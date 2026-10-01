@@ -5,11 +5,14 @@ import { Settings, RefreshCw, Key, ChevronRight, CheckCircle, XCircle } from "lu
 import { generatePoetryQuiz, PoetryData } from "@/lib/gemini";
 import { motion, AnimatePresence } from "framer-motion";
 
+import offlineData from "@/data/offlineData.json";
+
 export default function Home() {
   const [apiKey, setApiKey] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<PoetryData | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   
   // Quiz state
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -23,8 +26,6 @@ export default function Home() {
     const savedKey = localStorage.getItem("gemini_api_key");
     if (savedKey) {
       setApiKey(savedKey);
-    } else {
-      setIsSettingsOpen(true);
     }
   }, []);
 
@@ -55,20 +56,34 @@ export default function Home() {
   };
 
   const fetchNewQuiz = async () => {
-    if (!apiKey) {
-      setIsSettingsOpen(true);
-      return;
-    }
     setLoading(true);
     setError("");
     setShowResults(false);
     setAnswers({});
     setData(null);
+    setIsOfflineMode(false);
+
     try {
+      if (!navigator.onLine) {
+        throw new Error("لا يوجد اتصال بالإنترنت");
+      }
+      if (!apiKey) {
+        throw new Error("no-api-key");
+      }
       const result = await generatePoetryQuiz(apiKey);
       setData(result);
     } catch (err: any) {
-      setError(err.message || "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. تأكد من صحة المفتاح.");
+      if (err.message === "no-api-key") {
+        setIsSettingsOpen(true);
+        setLoading(false);
+        return;
+      }
+      // Fallback to offline data
+      console.warn("Using offline fallback due to error:", err.message);
+      setIsOfflineMode(true);
+      const verses = offlineData as PoetryData[];
+      const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+      setData(randomVerse);
     } finally {
       setLoading(false);
     }
@@ -144,9 +159,15 @@ export default function Home() {
             >
               <div className="bg-slate-800 rounded-2xl p-6 md:p-10 shadow-2xl border border-slate-700 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                <h2 className="text-3xl md:text-5xl font-bold text-center leading-relaxed text-emerald-300 py-8 font-serif">
+                <h2 className="text-3xl md:text-5xl font-bold text-center leading-relaxed text-emerald-300 py-8 font-serif whitespace-pre-line">
                   "{data.verse}"
                 </h2>
+                {isOfflineMode && (
+                  <div className="absolute top-4 left-4 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 space-x-reverse">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                    <span>وضع عدم الاتصال</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
