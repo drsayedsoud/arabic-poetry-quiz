@@ -27,6 +27,7 @@ export default function Home() {
   
   const [totalQuestions, setTotalQuestions] = useState(offlineData.length);
   const [toast, setToast] = useState<{message: string, type: "success" | "warning"} | null>(null);
+  const [solvedCount, setSolvedCount] = useState(0);
 
   // Wake Lock for "Always On Screen"
   useEffect(() => {
@@ -79,6 +80,11 @@ export default function Home() {
       setApiKey(savedKey);
     } else {
       setApiKey(DEFAULT_API_KEY);
+    }
+    
+    const savedSolved = localStorage.getItem("solved_count");
+    if (savedSolved) {
+      setSolvedCount(parseInt(savedSolved, 10));
     }
   }, []);
 
@@ -211,6 +217,9 @@ export default function Home() {
       return;
     }
     setShowResults(true);
+    const newCount = solvedCount + 1;
+    setSolvedCount(newCount);
+    localStorage.setItem("solved_count", newCount.toString());
   };
 
   return (
@@ -226,7 +235,9 @@ export default function Home() {
               روائع الشعر العربي
               <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
             </h1>
-            <span className="text-xs md:text-sm font-medium text-indigo-300/80">سارة السيد أبوالسعود</span>
+            <span className="text-xs md:text-sm font-medium text-indigo-300/80">
+              سارة السيد أبوالسعود <span className="text-emerald-400 font-bold mr-1">({solvedCount})</span>
+            </span>
           </div>
         </div>
         <button
