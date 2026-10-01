@@ -192,7 +192,7 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-500/10 to-purple-600/10 rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150"></div>
                 
                 <h2 className="relative text-2xl md:text-5xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-6 md:py-10 font-serif whitespace-pre-line drop-shadow-md">
-                  "{data.verse}"
+                  "{data.verse.replace(/\\n/g, '\n')}"
                 </h2>
                 
                 {isOfflineMode && (
