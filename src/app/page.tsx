@@ -168,8 +168,9 @@ export default function Home() {
           <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
             <span className="text-2xl">📜</span>
           </div>
-          <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm flex items-baseline">
             روائع الشعر العربي
+            <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({offlineData.length} سؤال)</span>
           </h1>
         </div>
         <button
