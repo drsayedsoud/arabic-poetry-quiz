@@ -68,54 +68,65 @@ export default function Home() {
     setTestMessage("");
   };
 
-  const fetchNewQuiz = async () => {
-    setLoading(true);
-    setError("");
-    setShowResults(false);
-    setAnswers({});
-    setData(null);
-    setIsOfflineMode(false);
+  const [aiQueue, setAiQueue] = useState<PoetryData[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
+  const getNextOffline = () => {
+    const verses = offlineData as PoetryData[];
+    let lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
+    if (lastIndex >= verses.length) {
+        lastIndex = 0;
+    }
+    const nextVerse = verses[lastIndex];
+    localStorage.setItem("last_offline_index", (lastIndex + 1).toString());
+    return nextVerse;
+  };
+
+  const startBackgroundGeneration = async () => {
+    if (isGenerating || !navigator.onLine) return;
+    const keyToUse = apiKey || DEFAULT_API_KEY;
+    if (!keyToUse) return;
+
+    setIsGenerating(true);
     try {
-      if (!navigator.onLine) {
-        throw new Error("لا يوجد اتصال بالإنترنت");
-      }
-      const keyToUse = apiKey || DEFAULT_API_KEY;
-      if (!keyToUse) {
-        throw new Error("no-api-key");
-      }
       const result = await generatePoetryQuiz(keyToUse);
-      setData(result);
-
-      // Save offline automatically
+      setAiQueue(prev => [...prev, result]);
+      
       try {
         await fetch('/api/saveOffline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(result)
         });
-      } catch (e) {
-        console.error("Failed to save to offline bank", e);
-      }
+      } catch (e) {}
     } catch (err: any) {
-      if (err.message === "no-api-key") {
-        setIsSettingsOpen(true);
-        setLoading(false);
-        return;
-      }
-      // Fallback to offline data sequentially
-      console.warn("Using offline fallback due to error:", err.message);
-      setIsOfflineMode(true);
-      const verses = offlineData as PoetryData[];
-      let lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
-      if (lastIndex >= verses.length) {
-          lastIndex = 0;
-      }
-      setData(verses[lastIndex]);
-      localStorage.setItem("last_offline_index", (lastIndex + 1).toString());
+      console.warn("Background generation failed:", err.message);
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
+  };
+
+  const handleNextQuiz = () => {
+    setLoading(false);
+    setError("");
+    setShowResults(false);
+    setAnswers({});
+    
+    if (aiQueue.length > 0) {
+      const nextAi = aiQueue[0];
+      setAiQueue(prev => prev.slice(1));
+      setData(nextAi);
+      setIsOfflineMode(false);
+    } else {
+      setData(getNextOffline());
+      setIsOfflineMode(true);
+    }
+
+    startBackgroundGeneration();
+  };
+
+  const fetchNewQuiz = () => {
+    handleNextQuiz();
   };
 
   const handleSelectOption = (qIndex: number, optIndex: number) => {
@@ -210,10 +221,15 @@ export default function Home() {
                   "{data.verse.replace(/\\n/g, '\n')}"
                 </h2>
                 
-                {isOfflineMode && (
-                  <div className="absolute top-4 md:top-6 left-4 md:left-6 bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 space-x-reverse shadow-lg">
-                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-amber-500 rounded-full animate-pulse"></span>
-                    <span>وضع عدم الاتصال</span>
+                {isOfflineMode ? (
+                  <div className="absolute top-4 md:top-6 left-4 md:left-6 bg-slate-500/20 text-slate-300 border border-slate-500/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 space-x-reverse shadow-lg">
+                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-slate-400 rounded-full"></span>
+                    <span>سؤال محلي (Offline)</span>
+                  </div>
+                ) : (
+                  <div className="absolute top-4 md:top-6 left-4 md:left-6 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center space-x-2 space-x-reverse shadow-lg">
+                    <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span>سؤال جديد (AI)</span>
                   </div>
                 )}
               </div>
