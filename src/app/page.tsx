@@ -86,25 +86,40 @@ export default function Home() {
       }
       const result = await generatePoetryQuiz(keyToUse);
       setData(result);
+
+      // Save offline automatically
+      try {
+        await fetch('/api/saveOffline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(result)
+        });
+      } catch (e) {
+        console.error("Failed to save to offline bank", e);
+      }
     } catch (err: any) {
       if (err.message === "no-api-key") {
         setIsSettingsOpen(true);
         setLoading(false);
         return;
       }
-      // Fallback to offline data
+      // Fallback to offline data sequentially
       console.warn("Using offline fallback due to error:", err.message);
       setIsOfflineMode(true);
       const verses = offlineData as PoetryData[];
-      const randomVerse = verses[Math.floor(Math.random() * verses.length)];
-      setData(randomVerse);
+      let lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
+      if (lastIndex >= verses.length) {
+          lastIndex = 0;
+      }
+      setData(verses[lastIndex]);
+      localStorage.setItem("last_offline_index", (lastIndex + 1).toString());
     } finally {
       setLoading(false);
     }
   };
 
   const handleSelectOption = (qIndex: number, optIndex: number) => {
-    if (showResults) return;
+    if (showResults || answers[qIndex] !== undefined) return;
     setAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
   };
 
@@ -187,7 +202,7 @@ export default function Home() {
               className="w-full space-y-8 md:space-y-10 pb-24"
             >
               {/* Verse Card */}
-              <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.3)] border border-white/10 relative overflow-hidden group">
+              <div className="bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/20 relative overflow-hidden group sticky top-24 z-30 mb-8">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-500/10 to-orange-600/10 rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-500/10 to-purple-600/10 rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150"></div>
                 
@@ -221,11 +236,12 @@ export default function Home() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-2">
                       {q.options.map((opt, optIndex) => {
+                        const isAnswered = answers[qIndex] !== undefined;
                         const isSelected = answers[qIndex] === optIndex;
                         const isCorrect = q.correctAnswerIndex === optIndex;
                         let btnClass = "border-white/10 bg-white/5 hover:bg-white/10 text-indigo-100 hover:text-white";
                         
-                        if (showResults) {
+                        if (isAnswered || showResults) {
                           if (isCorrect) {
                             btnClass = "border-emerald-500/50 bg-emerald-500/20 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
                           } else if (isSelected && !isCorrect) {
@@ -233,20 +249,18 @@ export default function Home() {
                           } else {
                             btnClass = "border-transparent bg-black/20 text-slate-500 opacity-60";
                           }
-                        } else if (isSelected) {
-                          btnClass = "border-amber-500/50 bg-amber-500/20 text-amber-200 ring-1 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]";
                         }
 
                         return (
                           <button
                             key={optIndex}
                             onClick={() => handleSelectOption(qIndex, optIndex)}
-                            disabled={showResults}
+                            disabled={isAnswered || showResults}
                             className={`p-4 md:p-5 rounded-2xl border text-right transition-all duration-300 flex items-center justify-between text-base md:text-lg font-medium group ${btnClass}`}
                           >
                             <span className="group-hover:translate-x-[-4px] transition-transform">{opt}</span>
-                            {showResults && isCorrect && <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0" />}
-                            {showResults && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-rose-400 shrink-0" />}
+                            {(isAnswered || showResults) && isCorrect && <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0" />}
+                            {(isAnswered || showResults) && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-rose-400 shrink-0" />}
                           </button>
                         );
                       })}
