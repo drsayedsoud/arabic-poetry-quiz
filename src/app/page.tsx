@@ -33,8 +33,14 @@ export default function Home() {
     if (!apiKey) return;
     setTestStatus("loading");
     setTestMessage("");
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+        signal: controller.signal
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error?.message || "مفتاح غير صالح");
@@ -43,7 +49,9 @@ export default function Home() {
       setTestMessage("المفتاح يعمل بنجاح! تم العثور على النماذج المتاحة.");
     } catch (err: any) {
       setTestStatus("error");
-      setTestMessage(err.message || "حدث خطأ أثناء الاتصال بالخادم");
+      setTestMessage(err.name === 'AbortError' ? "انتهى وقت الاتصال (جرب مرة أخرى)" : (err.message || "حدث خطأ أثناء الاتصال بالخادم"));
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 

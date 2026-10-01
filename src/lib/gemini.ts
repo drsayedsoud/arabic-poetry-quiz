@@ -17,8 +17,21 @@ export interface PoetryData {
 }
 
 export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> => {
-  // Fetch available models dynamically to avoid 404 errors
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+  // Fetch available models dynamically to avoid 404 errors with 5s timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  
+  let response;
+  try {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+      signal: controller.signal
+    });
+  } catch (e: any) {
+    throw new Error("فشل الاتصال بالخادم، قد يكون الإنترنت ضعيفاً");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   const data = await response.json();
   
   if (!response.ok) {
@@ -43,7 +56,8 @@ export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> =>
         return 0;
       };
       return score(b) - score(a);
-    });
+    })
+    .slice(0, 3); // ONLY TRY TOP 3 MODELS to avoid infinite loading
 
   if (modelsToTry.length === 0) {
     throw new Error("لم يتم العثور على أي نموذج يدعم توليد النصوص في حسابك.");
@@ -88,7 +102,12 @@ export const generatePoetryQuiz = async (apiKey: string): Promise<PoetryData> =>
   ]
 }
       `;
-      const result = await model.generateContent(prompt);
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error("Timeout")), 10000)
+        )
+      ]);
       text = result.response.text();
       break; // Success! exit the loop
     } catch (err: any) {
