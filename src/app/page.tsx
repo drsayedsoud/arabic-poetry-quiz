@@ -299,6 +299,12 @@ export default function Home() {
                 <h2 className="relative text-2xl md:text-4xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-4 md:py-6 font-serif whitespace-pre-line drop-shadow-md">
                   "{data.verse.replace(/\\n/g, '\n')}"
                 </h2>
+                
+                <div className="relative border-t border-white/10 pt-4 mt-2 flex items-center justify-between text-[11px] md:text-sm font-bold px-1 md:px-4 tracking-wide">
+                  <span className="text-right flex-1 truncate text-teal-300 drop-shadow-sm" title={data.poet}>{data.poet}</span>
+                  <span className="text-center flex-1 truncate px-2 text-amber-400 drop-shadow-sm" title={data.poem}>{data.poem}</span>
+                  <span className="text-left flex-1 truncate text-fuchsia-300 drop-shadow-sm" title={data.school}>{data.school}</span>
+                </div>
               </div>
 
               {/* Questions */}
