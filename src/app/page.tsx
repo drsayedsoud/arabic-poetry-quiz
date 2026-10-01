@@ -303,7 +303,7 @@ export default function Home() {
                 <div className="relative border-t border-white/10 pt-4 mt-2 flex items-center justify-between text-[11px] md:text-sm font-bold px-1 md:px-4 tracking-wide">
                   <span className="text-right flex-1 truncate text-teal-300 drop-shadow-sm" title={data.poet}>{data.poet}</span>
                   <span className="text-center flex-1 truncate px-2 text-amber-400 drop-shadow-sm" title={data.poem}>
-                    {data.poem.split(' ').length > 2 ? data.poem.split(' ').slice(0, 2).join(' ') + '...' : data.poem}
+                    {data.poem.split(' ').length > 3 ? data.poem.split(' ').slice(0, 3).join(' ') + '...' : data.poem}
                   </span>
                   <span className="text-left flex-1 truncate text-fuchsia-300 drop-shadow-sm" title={data.school}>{data.school}</span>
                 </div>
