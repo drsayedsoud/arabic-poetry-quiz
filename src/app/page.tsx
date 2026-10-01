@@ -223,15 +223,15 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[conic-gradient(at_bottom_left,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 text-slate-100 flex flex-col font-sans selection:bg-amber-500/30">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans selection:bg-indigo-500/30">
       {/* Header */}
-      <header className="flex items-center justify-between p-4 md:px-8 md:py-6 bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-40">
+      <header className="flex items-center justify-between px-4 py-3 md:px-8 md:py-4 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40">
         <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <span className="text-2xl">📜</span>
           </div>
           <div className="flex flex-col justify-center">
-            <h1 className="text-xl md:text-3xl font-extrabold bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm flex items-baseline -mt-1">
+            <h1 className="text-xl md:text-3xl font-extrabold text-slate-100 flex items-baseline -mt-1">
               روائع الشعر العربي
               <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
             </h1>
@@ -254,14 +254,14 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8 flex flex-col items-center">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 md:px-8 pb-8 pt-0 flex flex-col items-center">
         {!data && !loading && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center justify-center mt-12 md:mt-24 text-center space-y-6 md:space-y-8 px-4"
           >
-            <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(245,158,11,0.3)] animate-pulse-slow">
+            <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(99,102,241,0.3)] animate-pulse-slow">
               <span className="text-6xl md:text-7xl">✨</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-extrabold text-white">مرحباً بك في تحدي الشعر</h2>
@@ -270,7 +270,7 @@ export default function Home() {
             </p>
             <button
               onClick={fetchNewQuiz}
-              className="mt-8 px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-2xl font-bold text-lg md:text-xl shadow-xl shadow-orange-500/25 transition-all hover:scale-105 hover:-translate-y-1 flex items-center space-x-3 space-x-reverse border border-orange-400/50"
+              className="mt-8 px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl font-bold text-lg md:text-xl shadow-xl shadow-indigo-500/25 transition-all hover:scale-105 hover:-translate-y-1 flex items-center space-x-3 space-x-reverse border border-indigo-400/50"
             >
               <RefreshCw className="w-6 h-6 md:w-7 md:h-7" />
               <span>ابدأ التحدي الآن</span>
@@ -303,8 +303,8 @@ export default function Home() {
               className="w-full space-y-8 md:space-y-10 pb-24"
             >
               {/* Verse Card */}
-              <div className={`backdrop-blur-2xl rounded-3xl p-4 md:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border relative overflow-hidden group sticky top-24 z-30 mb-8 ${isOfflineMode ? 'bg-slate-900/90 border-white/10' : 'bg-indigo-950/90 border-indigo-500/30'}`}>
-                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-amber-500/10 to-orange-600/10' : 'from-emerald-500/10 to-teal-600/10'}`}></div>
+              <div className={`backdrop-blur-xl rounded-b-3xl p-6 md:p-8 shadow-2xl border-x border-b border-t-0 relative overflow-hidden group mb-10 w-full ${isOfflineMode ? 'bg-slate-900/95 border-slate-700/50' : 'bg-slate-900/95 border-slate-800/80'}`}>
+                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-amber-500/10 to-orange-600/10' : 'from-indigo-500/10 to-blue-600/10'}`}></div>
                 <div className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-indigo-500/10 to-purple-600/10' : 'from-indigo-500/10 to-cyan-600/10'}`}></div>
                 
                 <h2 className="relative text-2xl md:text-4xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-4 md:py-6 font-serif whitespace-pre-line drop-shadow-md">
@@ -426,7 +426,7 @@ export default function Home() {
                   <div className="flex justify-center pt-10">
                     <button
                       onClick={fetchNewQuiz}
-                      className="w-full md:w-auto px-8 py-4 md:px-10 md:py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center space-x-3 space-x-reverse transition-all hover:scale-105 shadow-xl shadow-orange-500/20"
+                      className="w-full md:w-auto px-8 py-4 md:px-10 md:py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center space-x-3 space-x-reverse transition-all hover:scale-105 shadow-xl shadow-indigo-500/20"
                     >
                       <RefreshCw className="w-6 h-6" />
                       <span>توليد مقطع شعري جديد</span>
