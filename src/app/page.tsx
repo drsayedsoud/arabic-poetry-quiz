@@ -303,7 +303,7 @@ export default function Home() {
               className="w-full space-y-8 md:space-y-10 pb-24"
             >
               {/* Verse Card */}
-              <div className={`backdrop-blur-xl rounded-b-3xl p-6 md:p-8 shadow-2xl border-x border-b border-t-0 relative overflow-hidden group mb-10 w-full ${isOfflineMode ? 'bg-slate-900/95 border-slate-700/50' : 'bg-slate-900/95 border-slate-800/80'}`}>
+              <div className={`backdrop-blur-2xl rounded-b-3xl p-6 md:p-8 shadow-2xl border-x border-b border-t-0 relative overflow-hidden group mb-10 w-full sticky top-[64px] md:top-[72px] z-30 ${isOfflineMode ? 'bg-slate-900/95 border-slate-700/50' : 'bg-slate-900/95 border-slate-800/80'}`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-amber-500/10 to-orange-600/10' : 'from-indigo-500/10 to-blue-600/10'}`}></div>
                 <div className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-indigo-500/10 to-purple-600/10' : 'from-indigo-500/10 to-cyan-600/10'}`}></div>
                 
