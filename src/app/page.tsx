@@ -301,8 +301,8 @@ export default function Home() {
 
         {/* السطر الثاني: الاسم وزر القصائد */}
         <div className="flex items-center justify-between pl-1 pr-11 md:pr-14">
-          <span className="text-[11px] md:text-sm font-medium text-indigo-300/80">
-            سارة السيد أبوالسعود <span className="text-emerald-400 font-bold mr-1">({solvedCount})</span>
+          <span className="text-base md:text-lg font-bold text-indigo-200">
+            سارة السيد أبوالسعود <span className="text-emerald-400 font-extrabold mr-1 text-sm md:text-base">({solvedCount})</span>
           </span>
           <Link href="/poems">
             <button className="text-sm md:text-base font-bold px-5 py-2 bg-gradient-to-l from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 border border-indigo-400/50 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-1.5 active:scale-95">
