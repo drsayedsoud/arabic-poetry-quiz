@@ -4,8 +4,7 @@ import { useState, useMemo } from "react";
 import { ArrowRight, Search, ChevronDown, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import offlineData from "@/data/offlineData.json";
-import { PoetryData } from "@/lib/gemini";
+import fullPoems from "@/data/fullPoems.json";
 
 interface GroupedPoem {
   title: string;
@@ -19,25 +18,7 @@ export default function PoemsPage() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const poemsArray = useMemo(() => {
-    const grouped = (offlineData as PoetryData[]).reduce((acc, current) => {
-      // Treat missing/undefined poem titles as "بدون عنوان"
-      const title = current.poem || "بدون عنوان";
-      if (!acc[title]) {
-        acc[title] = {
-          poet: current.poet || "غير معروف",
-          school: current.school || "",
-          verses: []
-        };
-      }
-      if (!acc[title].verses.includes(current.verse)) {
-        acc[title].verses.push(current.verse);
-      }
-      return acc;
-    }, {} as Record<string, { poet: string, school: string, verses: string[] }>);
-
-    return Object.entries(grouped)
-      .map(([title, data]) => ({ title, ...data }))
-      .sort((a, b) => a.title.localeCompare(b.title, 'ar'));
+    return (fullPoems as GroupedPoem[]).sort((a, b) => a.title.localeCompare(b.title, 'ar'));
   }, []);
 
   const filteredPoems = useMemo(() => {
