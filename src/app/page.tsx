@@ -264,41 +264,51 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans selection:bg-indigo-500/30">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 md:px-8 md:py-4 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40">
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <span className="text-2xl">📜</span>
-          </div>
-          <div className="flex flex-col justify-center">
-            <h1 className="text-xl md:text-3xl font-extrabold text-slate-100 flex items-baseline -mt-1">
+      <header className="flex flex-col px-4 py-2 md:px-8 md:py-3 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40 gap-y-1.5">
+        {/* السطر الأول: العنوان والأيقونات */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 space-x-reverse">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+              <span className="text-lg md:text-xl">📜</span>
+            </div>
+            <h1 className="text-lg md:text-2xl font-extrabold text-slate-100 flex items-baseline">
               روائع الشعر العربي
-              <span className="text-xs md:text-sm font-medium text-amber-200/60 mr-3">({totalQuestions} سؤال)</span>
+              <span className="text-[10px] md:text-xs font-medium text-amber-200/60 mr-2">({totalQuestions} سؤال)</span>
             </h1>
-            <span className="text-xs md:text-sm font-medium text-indigo-300/80">
-              سارة السيد أبوالسعود <span className="text-emerald-400 font-bold mr-1">({solvedCount})</span>
-            </span>
+          </div>
+          <div className="flex items-center space-x-2 space-x-reverse shrink-0">
+            <Link href="/favorites">
+              <button
+                className="p-1.5 md:p-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 shadow-sm"
+                title="المفضلة"
+              >
+                <Heart className="w-4 h-4 md:w-5 md:h-5 text-rose-500 fill-rose-500" />
+              </button>
+            </Link>
+            <button
+              onMouseDown={handlePressStart}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={handlePressStart}
+              onTouchEnd={handlePressEnd}
+              className="p-1.5 md:p-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 shadow-sm select-none"
+              title="الإعدادات"
+            >
+              <Settings className="w-4 h-4 md:w-5 md:h-5 text-amber-100 pointer-events-none" />
+            </button>
           </div>
         </div>
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <Link href="/favorites">
-            <button
-              className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-110 shadow-lg"
-              title="المفضلة"
-            >
-              <Heart className="w-5 h-5 md:w-6 md:h-6 text-rose-500 fill-rose-500" />
+
+        {/* السطر الثاني: الاسم وزر القصائد */}
+        <div className="flex items-center justify-between pl-1 pr-11 md:pr-14">
+          <span className="text-[11px] md:text-sm font-medium text-indigo-300/80">
+            سارة السيد أبوالسعود <span className="text-emerald-400 font-bold mr-1">({solvedCount})</span>
+          </span>
+          <Link href="/poems">
+            <button className="text-[10px] md:text-xs font-bold px-3 py-1 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-full transition-all flex items-center">
+              قصائد كاملة
             </button>
           </Link>
-          <button
-            onMouseDown={handlePressStart}
-            onMouseUp={handlePressEnd}
-            onMouseLeave={handlePressEnd}
-            onTouchStart={handlePressStart}
-            onTouchEnd={handlePressEnd}
-            className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg select-none"
-            title="الإعدادات"
-          >
-            <Settings className="w-5 h-5 md:w-6 md:h-6 text-amber-100 pointer-events-none" />
-          </button>
         </div>
       </header>
 
