@@ -305,8 +305,9 @@ export default function Home() {
             سارة السيد أبوالسعود <span className="text-emerald-400 font-bold mr-1">({solvedCount})</span>
           </span>
           <Link href="/poems">
-            <button className="text-[10px] md:text-xs font-bold px-3 py-1 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-full transition-all flex items-center">
-              قصائد كاملة
+            <button className="text-sm md:text-base font-bold px-5 py-2 bg-gradient-to-l from-indigo-500 to-purple-600 text-white hover:from-indigo-400 hover:to-purple-500 border border-indigo-400/50 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-1.5 active:scale-95">
+              <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+              <span>قصائد كاملة</span>
             </button>
           </Link>
         </div>
