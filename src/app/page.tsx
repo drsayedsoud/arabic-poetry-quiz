@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, RefreshCw, Key, ChevronRight, CheckCircle, XCircle, Heart, ArrowRight, ArrowLeft } from "lucide-react";
+import { Settings, RefreshCw, Key, ChevronRight, CheckCircle, XCircle, Heart, ArrowRight, ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { generatePoetryQuiz, PoetryData } from "@/lib/gemini";
 import { motion, AnimatePresence } from "framer-motion";
