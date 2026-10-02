@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, RefreshCw, Key, ChevronRight, CheckCircle, XCircle } from "lucide-react";
+import { Settings, RefreshCw, Key, ChevronRight, CheckCircle, XCircle, Heart, ArrowRight, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { generatePoetryQuiz, PoetryData } from "@/lib/gemini";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +29,9 @@ export default function Home() {
   const [totalQuestions, setTotalQuestions] = useState(offlineData.length);
   const [toast, setToast] = useState<{message: string, type: "success" | "warning"} | null>(null);
   const [solvedCount, setSolvedCount] = useState(0);
+
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [favorites, setFavorites] = useState<PoetryData[]>([]);
 
   // Wake Lock for "Always On Screen"
   useEffect(() => {
@@ -86,6 +90,16 @@ export default function Home() {
     if (savedSolved) {
       setSolvedCount(parseInt(savedSolved, 10));
     }
+
+    const lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
+    setCurrentIndex(lastIndex);
+
+    const savedFavs = localStorage.getItem("favorites");
+    if (savedFavs) {
+      try {
+        setFavorites(JSON.parse(savedFavs));
+      } catch (e) {}
+    }
   }, []);
 
   const testKey = async () => {
@@ -122,7 +136,6 @@ export default function Home() {
     setTestMessage("");
   };
 
-  const [aiQueue, setAiQueue] = useState<PoetryData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const shuffleQuizData = (quizData: PoetryData) => {
@@ -142,18 +155,6 @@ export default function Home() {
     return quizData;
   };
 
-  const getNextOffline = () => {
-    const verses = offlineData as PoetryData[];
-    let lastIndex = parseInt(localStorage.getItem("last_offline_index") || "0");
-    if (lastIndex >= verses.length) {
-        lastIndex = 0;
-    }
-    // Clone to avoid mutating the original JSON object imported in memory
-    const nextVerse = JSON.parse(JSON.stringify(verses[lastIndex]));
-    localStorage.setItem("last_offline_index", (lastIndex + 1).toString());
-    return shuffleQuizData(nextVerse);
-  };
-
   const startBackgroundGeneration = async () => {
     if (isGenerating || !navigator.onLine) return;
     const keyToUse = apiKey || DEFAULT_API_KEY;
@@ -162,8 +163,10 @@ export default function Home() {
     setIsGenerating(true);
     try {
       const result = await generatePoetryQuiz(keyToUse);
-      setAiQueue(prev => [...prev, result]);
-      setTotalQuestions(prev => prev + 1);
+      
+      // Add directly to in-memory bank
+      (offlineData as PoetryData[]).push(result);
+      setTotalQuestions(offlineData.length);
       
       setToast({message: "✨ تم توليد مقطع شعري جديد بنجاح!", type: "success"});
       setTimeout(() => setToast(null), 3000);
@@ -182,27 +185,63 @@ export default function Home() {
     }
   };
 
-  const handleNextQuiz = () => {
+  const loadQuiz = (index: number) => {
     setLoading(false);
     setError("");
     setShowResults(false);
     setAnswers({});
     
-    if (aiQueue.length > 0) {
-      const nextAi = JSON.parse(JSON.stringify(aiQueue[0]));
-      setAiQueue(prev => prev.slice(1));
-      setData(shuffleQuizData(nextAi));
-      setIsOfflineMode(false);
-    } else {
-      setData(getNextOffline());
-      setIsOfflineMode(true);
-    }
+    const verses = offlineData as PoetryData[];
+    if (verses.length === 0) return;
+    
+    const verse = JSON.parse(JSON.stringify(verses[index]));
+    setData(shuffleQuizData(verse));
+    setIsOfflineMode(true);
+  };
 
+  const handleNextQuiz = () => {
+    const verses = offlineData as PoetryData[];
+    let nextIndex = currentIndex + 1;
+    if (nextIndex >= verses.length) {
+      nextIndex = 0;
+    }
+    setCurrentIndex(nextIndex);
+    localStorage.setItem("last_offline_index", nextIndex.toString());
+    loadQuiz(nextIndex);
     startBackgroundGeneration();
   };
 
+  const handlePrevQuiz = () => {
+    const verses = offlineData as PoetryData[];
+    let prevIndex = currentIndex - 1;
+    if (prevIndex < 0) {
+      prevIndex = verses.length - 1;
+    }
+    setCurrentIndex(prevIndex);
+    localStorage.setItem("last_offline_index", prevIndex.toString());
+    loadQuiz(prevIndex);
+  };
+
   const fetchNewQuiz = () => {
-    handleNextQuiz();
+    if (!data) {
+      loadQuiz(currentIndex);
+      startBackgroundGeneration();
+    } else {
+      handleNextQuiz();
+    }
+  };
+
+  const toggleFavorite = () => {
+    if (!data) return;
+    const isFav = favorites.some(f => f.verse === data.verse);
+    let newFavs;
+    if (isFav) {
+      newFavs = favorites.filter(f => f.verse !== data.verse);
+    } else {
+      newFavs = [...favorites, data];
+    }
+    setFavorites(newFavs);
+    localStorage.setItem("favorites", JSON.stringify(newFavs));
   };
 
   const handleSelectOption = (qIndex: number, optIndex: number) => {
@@ -240,17 +279,27 @@ export default function Home() {
             </span>
           </div>
         </div>
-        <button
-          onMouseDown={handlePressStart}
-          onMouseUp={handlePressEnd}
-          onMouseLeave={handlePressEnd}
-          onTouchStart={handlePressStart}
-          onTouchEnd={handlePressEnd}
-          className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg select-none"
-          title="الإعدادات"
-        >
-          <Settings className="w-5 h-5 md:w-6 md:h-6 text-amber-100 pointer-events-none" />
-        </button>
+        <div className="flex items-center space-x-3 space-x-reverse">
+          <Link href="/favorites">
+            <button
+              className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:scale-110 shadow-lg"
+              title="المفضلة"
+            >
+              <Heart className="w-5 h-5 md:w-6 md:h-6 text-rose-500 fill-rose-500" />
+            </button>
+          </Link>
+          <button
+            onMouseDown={handlePressStart}
+            onMouseUp={handlePressEnd}
+            onMouseLeave={handlePressEnd}
+            onTouchStart={handlePressStart}
+            onTouchEnd={handlePressEnd}
+            className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg select-none"
+            title="الإعدادات"
+          >
+            <Settings className="w-5 h-5 md:w-6 md:h-6 text-amber-100 pointer-events-none" />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -307,6 +356,16 @@ export default function Home() {
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br rounded-full blur-3xl -mr-20 -mt-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-amber-500/10 to-orange-600/10' : 'from-indigo-500/10 to-blue-600/10'}`}></div>
                 <div className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr rounded-full blur-3xl -ml-20 -mb-20 transition-all duration-700 group-hover:scale-150 ${isOfflineMode ? 'from-indigo-500/10 to-purple-600/10' : 'from-indigo-500/10 to-cyan-600/10'}`}></div>
                 
+                <button 
+                  onClick={toggleFavorite}
+                  className="absolute top-4 left-4 z-40 p-2 rounded-full hover:bg-white/10 transition-colors"
+                  title="أضف للمفضلة"
+                >
+                  <Heart 
+                    className={`w-6 h-6 transition-colors ${favorites.some(f => f.verse === data.verse) ? 'text-rose-500 fill-rose-500' : 'text-white/30 hover:text-white/60'}`} 
+                  />
+                </button>
+
                 <h2 className="relative text-2xl md:text-4xl font-bold text-center leading-loose md:leading-relaxed text-amber-50 py-4 md:py-6 font-serif whitespace-pre-line drop-shadow-md">
                   "{data.verse.replace(/\\n/g, '\n')}"
                 </h2>
@@ -373,12 +432,18 @@ export default function Home() {
 
               {/* Actions & Results */}
               {!showResults ? (
-                <div className="flex justify-center mt-10 md:mt-12">
+                <div className="flex justify-between items-center mt-10 md:mt-12">
+                  <button onClick={handlePrevQuiz} className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full transition-all text-white/70 hover:text-white shrink-0" title="السؤال السابق">
+                    <ArrowRight className="w-6 h-6" />
+                  </button>
                   <button
                     onClick={handleSubmit}
-                    className="w-full md:w-auto px-8 py-4 md:px-12 md:py-5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-2xl font-bold text-lg md:text-xl shadow-xl shadow-purple-500/25 transition-all hover:scale-105 hover:-translate-y-1"
+                    className="w-full md:w-auto px-6 py-4 md:px-12 md:py-5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white rounded-2xl font-bold text-base md:text-xl shadow-xl shadow-purple-500/25 transition-all hover:scale-105 hover:-translate-y-1 mx-2 md:mx-4"
                   >
                     عرض النتيجة والشرح التفصيلي
+                  </button>
+                  <button onClick={handleNextQuiz} className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full transition-all text-white/70 hover:text-white shrink-0" title="السؤال التالي">
+                    <ArrowLeft className="w-6 h-6" />
                   </button>
                 </div>
               ) : (
@@ -423,13 +488,19 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <div className="flex justify-center pt-10">
+                  <div className="flex justify-between items-center pt-10">
+                    <button onClick={handlePrevQuiz} className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full transition-all text-white/70 hover:text-white shrink-0" title="السؤال السابق">
+                      <ArrowRight className="w-6 h-6" />
+                    </button>
                     <button
                       onClick={fetchNewQuiz}
-                      className="w-full md:w-auto px-8 py-4 md:px-10 md:py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center space-x-3 space-x-reverse transition-all hover:scale-105 shadow-xl shadow-indigo-500/20"
+                      className="w-full md:w-auto px-6 py-4 md:px-10 md:py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl font-bold text-base md:text-lg flex items-center justify-center space-x-3 space-x-reverse transition-all hover:scale-105 shadow-xl shadow-indigo-500/20 mx-2 md:mx-4"
                     >
                       <RefreshCw className="w-6 h-6" />
                       <span>توليد مقطع شعري جديد</span>
+                    </button>
+                    <button onClick={handleNextQuiz} className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full transition-all text-white/70 hover:text-white shrink-0" title="السؤال التالي">
+                      <ArrowLeft className="w-6 h-6" />
                     </button>
                   </div>
                 </motion.div>
