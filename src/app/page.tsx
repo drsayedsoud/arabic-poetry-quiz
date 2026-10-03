@@ -194,7 +194,15 @@ export default function Home() {
     const verses = offlineData as PoetryData[];
     if (verses.length === 0) return;
     
-    const verse = JSON.parse(JSON.stringify(verses[index]));
+    const rawVerse = JSON.parse(JSON.stringify(verses[index]));
+    const verse = {
+      ...rawVerse,
+      verse: rawVerse.verse || rawVerse.text || "نص مفقود",
+      poet: rawVerse.poet || "شاهد نحوي",
+      poem: rawVerse.poem || "تطبيق لغوي",
+      school: rawVerse.school || rawVerse.rule || "القواعد النحوية",
+      wisdom: rawVerse.wisdom || rawVerse.rule || "تطبيق عملي"
+    };
     setData(shuffleQuizData(verse));
     setIsOfflineMode(true);
   };
