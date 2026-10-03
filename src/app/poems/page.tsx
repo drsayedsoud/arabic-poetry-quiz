@@ -114,14 +114,31 @@ export default function PoemsPage() {
                       className="border-t border-slate-800/80"
                     >
                       <div className="p-5 md:p-8 bg-slate-950/50 space-y-6">
-                        {poem.verses.map((verse, vIndex) => (
-                          <div key={vIndex} className="relative">
-                            {vIndex > 0 && <div className="w-12 h-px bg-white/5 mx-auto mb-6"></div>}
-                            <p className="text-lg md:text-2xl font-serif leading-loose md:leading-loose text-center text-indigo-50 whitespace-pre-line drop-shadow-sm">
-                              {verse.replace(/\\n/g, '\n')}
-                            </p>
-                          </div>
-                        ))}
+                        {poem.verses.map((verse, vIndex) => {
+                          const parts = verse.split(' ... ');
+                          return (
+                            <div key={vIndex} className="relative py-3 group hover:bg-white/[0.02] transition-colors rounded-lg px-2">
+                              {parts.length >= 2 ? (
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 w-full max-w-4xl mx-auto">
+                                  <p className="text-lg md:text-2xl font-serif leading-relaxed md:leading-loose text-indigo-50 drop-shadow-sm flex-1 text-center md:text-right w-full">
+                                    {parts[0]}
+                                  </p>
+                                  <div className="hidden md:flex flex-col items-center justify-center shrink-0 opacity-20 group-hover:opacity-40 transition-opacity">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-300 mb-1"></span>
+                                    <span className="w-1 h-1 rounded-full bg-indigo-300"></span>
+                                  </div>
+                                  <p className="text-lg md:text-2xl font-serif leading-relaxed md:leading-loose text-indigo-50 drop-shadow-sm flex-1 text-center md:text-left w-full">
+                                    {parts.slice(1).join(' ... ')}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-lg md:text-2xl font-serif leading-relaxed md:leading-loose text-center text-indigo-50 whitespace-pre-line drop-shadow-sm max-w-4xl mx-auto">
+                                  {verse.replace(/\\n/g, '\n')}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
